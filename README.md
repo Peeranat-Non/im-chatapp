@@ -40,27 +40,21 @@
 ```mermaid
 sequenceDiagram
     participant A as Client A
-    participant S as Server<br/>(Express + Socket.io)
-    participant O as Client B, C, ...
+    participant S as Server
+    participant O as Client B and C
 
-    rect rgb(30, 41, 59)
-    Note over A,S: 1) โหลดหน้าเว็บ
+    Note over A,S: ขั้นที่ 1 โหลดหน้าเว็บ
     A->>S: HTTP GET /
-    S-->>A: ส่งไฟล์ index.html / client.js
-    end
+    S-->>A: ส่งไฟล์ index.html และ client.js
 
-    rect rgb(30, 41, 59)
-    Note over A,S: 2) เปิดการเชื่อมต่อ Real-time
-    A->>S: WebSocket Handshake (Upgrade)
+    Note over A,S: ขั้นที่ 2 เปิดการเชื่อมต่อ Real time
+    A->>S: WebSocket Handshake
     S-->>A: 101 Switching Protocols
-    end
 
-    rect rgb(30, 41, 59)
-    Note over A,O: 3) ส่งข้อความแบบ Real-time
-    A->>S: emit("chat-message")
-    S->>O: io.emit("chat-message")
+    Note over A,O: ขั้นที่ 3 ส่งข้อความแบบ Real time
+    A->>S: emit chat-message
+    S->>O: io.emit chat-message
     Note over S,O: broadcast ให้ทุกคนในห้องพร้อมกันทันที
-    end
 ```
 
 ---
