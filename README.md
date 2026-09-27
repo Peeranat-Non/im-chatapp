@@ -37,15 +37,30 @@
 | `disconnect` | อัตโนมัติ | แจ้งเมื่อผู้ใช้หลุดการเชื่อมต่อ |
 
 ### สรุปการไหลของข้อมูล
-```
-Client A                     Server (Express + Socket.io)                Client B, C, ...
-   │  HTTP GET /              │                                              │
-   │ ────────────────────────▶│  (โหลดหน้าเว็บ index.html/client.js)         │
-   │  WebSocket Handshake      │                                              │
-   │ ────────────────────────▶│ 101 Switching Protocols                      │
-   │  emit("chat-message")     │                                              │
-   │ ────────────────────────▶│ io.emit("chat-message") ─────────────────────▶│
-   │                           │  (broadcast ให้ทุกคนในห้องพร้อมกัน)          │
+```mermaid
+sequenceDiagram
+    participant A as Client A
+    participant S as Server<br/>(Express + Socket.io)
+    participant O as Client B, C, ...
+
+    rect rgb(30, 41, 59)
+    Note over A,S: 1) โหลดหน้าเว็บ
+    A->>S: HTTP GET /
+    S-->>A: ส่งไฟล์ index.html / client.js
+    end
+
+    rect rgb(30, 41, 59)
+    Note over A,S: 2) เปิดการเชื่อมต่อ Real-time
+    A->>S: WebSocket Handshake (Upgrade)
+    S-->>A: 101 Switching Protocols
+    end
+
+    rect rgb(30, 41, 59)
+    Note over A,O: 3) ส่งข้อความแบบ Real-time
+    A->>S: emit("chat-message")
+    S->>O: io.emit("chat-message")
+    Note over S,O: broadcast ให้ทุกคนในห้องพร้อมกันทันที
+    end
 ```
 
 ---
