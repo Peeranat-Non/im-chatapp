@@ -4,6 +4,8 @@
   "description": "Instant Messaging App - Data Communication Project (Socket.io + Express + File/Voice upload)",
   "main": "server.js",
   "scripts": {
+    "dev": "node server.js",
+    "build": "echo 'Build complete'",
     "start": "node server.js"
   },
   "dependencies": {

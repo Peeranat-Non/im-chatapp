@@ -1,0 +1,4 @@
+{
+  "name": "Instant Messaging App",
+  "description": "Real-time instant messaging chat app with text, emoji, file, GIF, and voice recording features built with Express and Socket.io."
+}

@@ -1,7 +1,7 @@
 // ===============================================
 // client.js
 // โค้ดฝั่ง Client: เชื่อมต่อ server ผ่าน Socket.io (WebSocket)
-// รองรับ: ข้อความ, แนบรูป/วิดีโอ/ไฟล์/GIF, emoji, อัดเสียงส่ง
+// รองรับ: ข้อความตัวหนังสือ, GIF, emoji, อัดเสียงส่ง (UI Minimal Clean)
 // ===============================================
 
 const socket = io();
@@ -13,6 +13,7 @@ const chatScreen = document.getElementById("chat-screen");
 const usernameInput = document.getElementById("username-input");
 const joinBtn = document.getElementById("join-btn");
 const joinError = document.getElementById("join-error");
+const myBadge = document.getElementById("my-badge");
 
 const messagesDiv = document.getElementById("messages");
 const messageInput = document.getElementById("message-input");
@@ -20,8 +21,9 @@ const sendBtn = document.getElementById("send-btn");
 const onlineCountEl = document.getElementById("online-count");
 const typingIndicator = document.getElementById("typing-indicator");
 
-const attachBtn = document.getElementById("attach-btn");
-const fileInput = document.getElementById("file-input");
+// เอาแนบไฟล์ออก คงเหลือ รูปภาพ, GIF, Emoji, Voice
+const imageBtn = document.getElementById("image-btn");
+const imageInput = document.getElementById("image-input");
 const gifBtn = document.getElementById("gif-btn");
 const gifInput = document.getElementById("gif-input");
 const emojiBtn = document.getElementById("emoji-btn");
@@ -33,6 +35,20 @@ const recordTimerEl = document.getElementById("record-timer");
 const cancelRecordBtn = document.getElementById("cancel-record-btn");
 const stopRecordBtn = document.getElementById("stop-record-btn");
 
+// Lightbox modal elements
+const imageModal = document.getElementById("image-modal");
+const modalImg = document.getElementById("modal-img");
+const closeModalBtn = document.getElementById("close-modal-btn");
+
+if (closeModalBtn) {
+  closeModalBtn.addEventListener("click", () => imageModal.classList.add("hidden"));
+  imageModal.addEventListener("click", (e) => {
+    if (e.target === imageModal || e.target === closeModalBtn) {
+      imageModal.classList.add("hidden");
+    }
+  });
+}
+
 // ===============================================
 // เข้าห้องแชท
 // ===============================================
@@ -43,13 +59,19 @@ function handleJoin() {
     return;
   }
   myUsername = username;
+  if (myBadge) {
+    myBadge.textContent = `@${myUsername}`;
+  }
   socket.emit("join", myUsername);
   joinScreen.classList.add("hidden");
   chatScreen.classList.remove("hidden");
   messageInput.focus();
 }
+
 joinBtn.addEventListener("click", handleJoin);
-usernameInput.addEventListener("keydown", (e) => { if (e.key === "Enter") handleJoin(); });
+usernameInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") handleJoin();
+});
 
 // ===============================================
 // ส่งข้อความตัวหนังสือ
@@ -60,15 +82,18 @@ function sendTextMessage() {
   socket.emit("chat-message", { username: myUsername, message: text, type: "text" });
   messageInput.value = "";
 }
+
 sendBtn.addEventListener("click", sendTextMessage);
 messageInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") sendTextMessage();
-  else socket.emit("typing", myUsername);
+  if (e.key === "Enter") {
+    sendTextMessage();
+  } else {
+    socket.emit("typing", myUsername);
+  }
 });
 
 // ===============================================
-// อัปโหลดไฟล์ทั่วไปแล้วส่งเป็นข้อความ
-// ใช้ได้กับ: รูป, วิดีโอ, ไฟล์, GIF, เสียงที่อัดไว้
+// อัปโหลดไฟล์ส่งเป็นข้อความ (GIF / เสียงที่อัด)
 // ===============================================
 async function uploadAndSend(file) {
   const formData = new FormData();
@@ -86,52 +111,80 @@ async function uploadAndSend(file) {
     socket.emit("chat-message", {
       username: myUsername,
       message: "",
-      type: data.type,       // image | video | audio | file
+      type: data.type, // image | audio
       fileUrl: data.url,
       fileName: data.fileName,
     });
   } catch (err) {
-    renderSystemMessage("อัปโหลดไฟล์ไม่สำเร็จ กรุณาลองใหม่");
+    renderSystemMessage("ไม่สามารถส่งไฟล์ได้ กรุณาลองใหม่อีกครั้ง");
     console.error(err);
   }
 }
 
-// ---------- ปุ่มแนบไฟล์ (รูป/วิดีโอ/ไฟล์) ----------
-attachBtn.addEventListener("click", () => fileInput.click());
-fileInput.addEventListener("change", () => {
-  if (fileInput.files[0]) uploadAndSend(fileInput.files[0]);
-  fileInput.value = "";
-});
+// ---------- ปุ่มแนบรูปภาพ ----------
+if (imageBtn && imageInput) {
+  imageBtn.addEventListener("click", () => imageInput.click());
+  imageInput.addEventListener("change", () => {
+    if (imageInput.files[0]) {
+      uploadAndSend(imageInput.files[0]);
+    }
+    imageInput.value = "";
+  });
+}
 
 // ---------- ปุ่มแนบ GIF ----------
-// หมายเหตุ: เป็นการเลือกไฟล์ .gif จากเครื่องผู้ใช้ ไม่ใช่ระบบค้นหา GIF ออนไลน์แบบ Discord
-// (การค้นหา GIF ออนไลน์ต้องสมัครใช้ API ของผู้ให้บริการ เช่น Tenor และผูก API key เพิ่มเติม)
-gifBtn.addEventListener("click", () => gifInput.click());
-gifInput.addEventListener("change", () => {
-  if (gifInput.files[0]) uploadAndSend(gifInput.files[0]);
-  gifInput.value = "";
+if (gifBtn && gifInput) {
+  gifBtn.addEventListener("click", () => gifInput.click());
+  gifInput.addEventListener("change", () => {
+    if (gifInput.files[0]) uploadAndSend(gifInput.files[0]);
+    gifInput.value = "";
+  });
+}
+
+// รองรับการวางรูปภาพจาก Clipboard (Ctrl+V / Cmd+V)
+document.addEventListener("paste", (e) => {
+  if (joinScreen && !joinScreen.classList.contains("hidden")) return;
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type.indexOf("image") !== -1) {
+      const blob = items[i].getAsFile();
+      if (blob) {
+        uploadAndSend(blob);
+        e.preventDefault();
+        break;
+      }
+    }
+  }
 });
 
 // ===============================================
-// Emoji Picker (แบบง่าย ไม่พึ่ง library ภายนอก)
+// Emoji Picker (มินิมอล)
 // ===============================================
 const EMOJI_LIST = [
-  "😀","😁","😂","🤣","😊","😍","😘","😜","🤔","😎",
-  "😭","😡","😱","👍","👎","👏","🙏","💪","🔥","🎉",
-  "❤️","💙","💚","💛","🧡","💜","🖤","🤍","✅","❌",
-  "🎂","🎁","☕","🍕","🍔","⚽","🏀","🎮","📷","🎵",
+  "😊","😍","😂","🤣","🥰","😎","🥳","🥺",
+  "👍","👏","🙌","🙏","✨","🔥","💖","❤️",
+  "🎉","☕","🍕","🍰","💡","⭐","💬","🚀",
+  "👀","🤝","💯","👌","😴","🤔","😇","☀️"
 ];
+
 EMOJI_LIST.forEach((emo) => {
   const btn = document.createElement("button");
+  btn.type = "button";
   btn.textContent = emo;
-  btn.className = "hover:bg-gray-700 rounded p-1";
+  btn.className = "hover:bg-slate-100 rounded-xl p-1.5 transition text-lg flex items-center justify-center";
   btn.addEventListener("click", () => {
     messageInput.value += emo;
     messageInput.focus();
   });
   emojiPanel.appendChild(btn);
 });
-emojiBtn.addEventListener("click", () => emojiPanel.classList.toggle("hidden"));
+
+emojiBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  emojiPanel.classList.toggle("hidden");
+});
+
 document.addEventListener("click", (e) => {
   if (!emojiPanel.contains(e.target) && e.target !== emojiBtn) {
     emojiPanel.classList.add("hidden");
@@ -151,7 +204,7 @@ async function startRecording() {
   try {
     recordedStream = await navigator.mediaDevices.getUserMedia({ audio: true });
   } catch (err) {
-    renderSystemMessage("ไม่สามารถเข้าถึงไมโครโฟนได้ กรุณาอนุญาตการใช้งานไมโครโฟน");
+    renderSystemMessage("ไม่สามารถเข้าถึงไมโครโฟนได้ กรุณาอนุญาตการใช้งานไมค์ในเบราว์เซอร์");
     return;
   }
 
@@ -162,7 +215,6 @@ async function startRecording() {
   mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
 
   mediaRecorder.onstop = () => {
-    // ปิดไมโครโฟนหลังหยุดอัด
     recordedStream.getTracks().forEach((t) => t.stop());
     clearInterval(recordTimerInterval);
     recordingBar.classList.add("hidden");
@@ -213,65 +265,121 @@ micBtn.addEventListener("click", startRecording);
 stopRecordBtn.addEventListener("click", stopRecordingAndSend);
 cancelRecordBtn.addEventListener("click", cancelRecording);
 
+// Helper for formatting time (HH:MM)
+function formatTime(date = new Date()) {
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
 // ===============================================
-// แสดงข้อความในหน้าแชท (แยกตามประเภท)
+// แสดงข้อความในหน้าแชท (Minimal Styling)
 // ===============================================
-function renderMessage({ username, message, type, fileUrl, fileName }) {
+function renderMessage({ username, message, type, fileUrl, fileName, timestamp }) {
   const isMe = username === myUsername;
+  const timeStr = formatTime(timestamp ? new Date(timestamp) : new Date());
 
   const wrapper = document.createElement("div");
-  wrapper.className = `flex flex-col ${isMe ? "items-end" : "items-start"}`;
+  wrapper.className = `flex flex-col group ${isMe ? "items-end" : "items-start"} max-w-full animate-fadeIn`;
 
+  // Sender Name & Time header
+  const metaEl = document.createElement("div");
+  metaEl.className = `flex items-center gap-1.5 mb-1 px-1 text-[11px] ${isMe ? "flex-row-reverse text-slate-400" : "text-slate-500"}`;
+  
   const nameEl = document.createElement("span");
-  nameEl.className = "text-xs text-gray-200";
-  nameEl.textContent = isMe ? "You" : username;
-  wrapper.appendChild(nameEl);
+  nameEl.className = `font-medium ${isMe ? "text-slate-500" : "text-slate-700"}`;
+  nameEl.textContent = isMe ? "คุณ" : username;
+
+  const timeEl = document.createElement("span");
+  timeEl.className = "text-[10px] text-slate-400";
+  timeEl.textContent = timeStr;
+
+  metaEl.appendChild(nameEl);
+  metaEl.appendChild(timeEl);
+  wrapper.appendChild(metaEl);
 
   let contentEl;
 
   if (type === "image") {
-    contentEl = document.createElement("img");
-    contentEl.src = fileUrl;
-    contentEl.className = "max-w-[60%] sm:max-w-[220px] rounded-lg mt-1";
+    // Image / GIF
+    const box = document.createElement("div");
+    box.className = "overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm max-w-[75%] sm:max-w-xs cursor-pointer hover:opacity-95 transition active:scale-[0.98]";
+    const img = document.createElement("img");
+    img.src = fileUrl;
+    img.alt = fileName || "image";
+    img.loading = "lazy";
+    img.className = "w-full h-auto object-cover rounded-2xl";
+    box.appendChild(img);
+    
+    // คลิกเพื่อดูรูปขนาดเต็ม
+    box.addEventListener("click", () => {
+      if (imageModal && modalImg) {
+        modalImg.src = fileUrl;
+        imageModal.classList.remove("hidden");
+      }
+    });
+
+    contentEl = box;
   } else if (type === "video") {
-    contentEl = document.createElement("video");
-    contentEl.src = fileUrl;
-    contentEl.controls = true;
-    contentEl.className = "max-w-[70%] sm:max-w-[240px] rounded-lg mt-1";
+    const video = document.createElement("video");
+    video.src = fileUrl;
+    video.controls = true;
+    video.className = "max-w-[85%] sm:max-w-sm rounded-2xl border border-slate-200 shadow-sm";
+    contentEl = video;
   } else if (type === "audio") {
-    contentEl = document.createElement("audio");
-    contentEl.src = fileUrl;
-    contentEl.controls = true;
-    contentEl.className = "mt-1 max-w-[220px]";
+    // Clean audio player
+    const audioBox = document.createElement("div");
+    audioBox.className = `p-2.5 rounded-2xl shadow-sm border flex flex-col gap-1 ${
+      isMe ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-800"
+    }`;
+    const audio = document.createElement("audio");
+    audio.src = fileUrl;
+    audio.controls = true;
+    audio.className = "h-8 max-w-[220px] sm:max-w-[260px]";
+    audioBox.appendChild(audio);
+    contentEl = audioBox;
   } else if (type === "file") {
     contentEl = document.createElement("a");
     contentEl.href = fileUrl;
     contentEl.download = fileName || "";
     contentEl.target = "_blank";
-    contentEl.className = `px-3 py-2 rounded-lg text-sm mt-1 flex items-center gap-2 ${
-      isMe ? "bg-purple-600 text-white" : "bg-green-400 text-black"
-    }`;
-    contentEl.innerHTML = `📎 <span class="underline">${fileName || "ไฟล์แนบ"}</span>`;
+    contentEl.className = `px-3.5 py-2.5 rounded-2xl text-xs flex items-center gap-2 border shadow-sm ${
+      isMe
+        ? "bg-slate-900 text-white border-slate-800 hover:bg-slate-800"
+        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+    } transition`;
+    contentEl.innerHTML = `<span>📎</span><span class="font-medium underline truncate max-w-[180px]">${fileName || "ดาวน์โหลดไฟล์"}</span>`;
   } else {
-    // text
-    contentEl = document.createElement("span");
-    contentEl.className = `px-3 py-1 rounded-full text-sm mt-1 break-words ${
-      isMe ? "bg-purple-600 text-white" : "bg-green-400 text-black"
+    // Text message bubble
+    contentEl = document.createElement("div");
+    contentEl.className = `px-4 py-2.5 rounded-2xl text-sm leading-relaxed break-words max-w-[85%] sm:max-w-md shadow-sm ${
+      isMe
+        ? "bg-slate-900 text-white rounded-tr-sm"
+        : "bg-white text-slate-800 border border-slate-200/80 rounded-tl-sm"
     }`;
     contentEl.textContent = message;
   }
 
   wrapper.appendChild(contentEl);
   messagesDiv.appendChild(wrapper);
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  
+  // Smooth scroll to bottom
+  messagesDiv.scrollTo({
+    top: messagesDiv.scrollHeight,
+    behavior: "smooth"
+  });
 }
 
 function renderSystemMessage(text) {
   const el = document.createElement("div");
-  el.className = "text-center text-xs italic text-gray-100";
-  el.textContent = text;
+  el.className = "flex justify-center my-2";
+  const badge = document.createElement("span");
+  badge.className = "px-3 py-1 rounded-full text-[11px] font-medium text-slate-500 bg-slate-200/60 border border-slate-200/50";
+  badge.textContent = text;
+  el.appendChild(badge);
   messagesDiv.appendChild(el);
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  messagesDiv.scrollTo({
+    top: messagesDiv.scrollHeight,
+    behavior: "smooth"
+  });
 }
 
 // ===============================================
@@ -279,15 +387,23 @@ function renderSystemMessage(text) {
 // ===============================================
 socket.on("chat-message", (data) => renderMessage(data));
 socket.on("system-message", (text) => renderSystemMessage(text));
-socket.on("online-count", (count) => (onlineCountEl.textContent = `online: ${count}`));
+socket.on("online-count", (count) => {
+  if (onlineCountEl) {
+    onlineCountEl.textContent = `ออนไลน์: ${count}`;
+  }
+});
 
 let typingTimeout;
 socket.on("typing", (username) => {
   if (username === myUsername) return;
   typingIndicator.textContent = `${username} กำลังพิมพ์...`;
   clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => (typingIndicator.textContent = ""), 1500);
+  typingTimeout = setTimeout(() => {
+    typingIndicator.textContent = "";
+  }, 1500);
 });
 
-socket.on("disconnect", () => renderSystemMessage("การเชื่อมต่อขาดหาย กำลังพยายามเชื่อมต่อใหม่..."));
-socket.on("connect", () => console.log("เชื่อมต่อกับ server สำเร็จ:", socket.id));
+socket.on("disconnect", () => renderSystemMessage("ขาดการเชื่อมต่อ กำลังเชื่อมต่อใหม่..."));
+socket.on("connect", () => {
+  console.log("Connected to server:", socket.id);
+});
