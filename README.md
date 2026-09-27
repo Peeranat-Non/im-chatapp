@@ -1,6 +1,6 @@
 # 💬 IM Chat App — Instant Messaging Application
 
-โปรเจกต์วิชา **Data Networking / Data Communication**
+โปรเจกต์วิชา **Data Communication And Networking**
 พัฒนาแอปพลิเคชันสำหรับติดต่อสื่อสารแบบ **Instant Messaging (IM)** คล้ายกับ Line, Facebook Messenger, WhatsApp
 โดยเน้นสาธิตการรับ-ส่งข้อมูล (ข้อความ ภาพ วิดีโอ เสียง ไฟล์) แบบ **Real-time** ผ่าน **Protocol การสื่อสารข้อมูล** บนเครือข่ายอินเทอร์เน็ต
 
