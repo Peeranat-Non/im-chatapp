@@ -28,6 +28,30 @@ if (!fs.existsSync(UPLOAD_DIR)) {
 // เก็บรายชื่อผู้ใช้ที่ online อยู่
 const onlineUsers = {};
 
+// ประวัติข้อความสนทนา (Persisted in server memory & file)
+const HISTORY_FILE = path.join(__dirname, "chat-history.json");
+const MAX_HISTORY = 150;
+let chatHistory = [];
+
+try {
+  if (fs.existsSync(HISTORY_FILE)) {
+    const raw = fs.readFileSync(HISTORY_FILE, "utf-8");
+    chatHistory = JSON.parse(raw);
+    if (!Array.isArray(chatHistory)) chatHistory = [];
+  }
+} catch (e) {
+  console.warn("Could not load chat history file:", e);
+  chatHistory = [];
+}
+
+function saveHistory() {
+  try {
+    fs.writeFileSync(HISTORY_FILE, JSON.stringify(chatHistory.slice(-MAX_HISTORY)), "utf-8");
+  } catch (e) {
+    console.error("Failed to save chat history:", e);
+  }
+}
+
 // ===============================================
 // ตั้งค่า Multer สำหรับรับไฟล์อัปโหลด
 // ===============================================
@@ -88,8 +112,15 @@ io.on("connection", (socket) => {
 
   // -------- Event: join --------
   socket.on("join", (username) => {
+    const isFirstTimeJoin = !onlineUsers[socket.id];
     onlineUsers[socket.id] = username;
-    io.emit("system-message", `${username} ได้เข้าร่วมห้องแชท`);
+    
+    // ส่งประวัติข้อความเดิมให้กับ client ที่เพิ่งเชื่อมต่อหรือรีเฟรชกลับเข้ามา
+    socket.emit("chat-history", chatHistory);
+
+    if (isFirstTimeJoin) {
+      io.emit("system-message", `${username} ได้เข้าร่วมห้องแชท`);
+    }
     io.emit("online-count", Object.keys(onlineUsers).length);
     console.log(`[JOIN] ${username} (${socket.id})`);
   });
@@ -98,14 +129,24 @@ io.on("connection", (socket) => {
   // data = { username, message, type, fileUrl?, fileName? }
   // type: 'text' | 'image' | 'video' | 'audio' | 'file'
   socket.on("chat-message", (data) => {
-    io.emit("chat-message", {
+    const msgObj = {
+      id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       username: data.username,
       message: data.message || "",
       type: data.type || "text",
       fileUrl: data.fileUrl || null,
       fileName: data.fileName || null,
+      timestamp: Date.now(),
       time: new Date().toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }),
-    });
+    };
+
+    chatHistory.push(msgObj);
+    if (chatHistory.length > MAX_HISTORY) {
+      chatHistory.shift();
+    }
+    saveHistory();
+
+    io.emit("chat-message", msgObj);
     console.log(`[MESSAGE] ${data.username}: ${data.type} ${data.message || data.fileName || ""}`);
   });
 

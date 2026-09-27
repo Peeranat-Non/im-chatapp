@@ -7,6 +7,14 @@
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {}
+      }
+    }
+  </script>
   <!-- Google Fonts Inter & Prompt -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,12 +62,20 @@
     }
     #messages::-webkit-scrollbar-thumb,
     #emoji-panel::-webkit-scrollbar-thumb {
-      background: #e2e8f0;
+      background: #cbd5e1;
       border-radius: 9999px;
+    }
+    .dark #messages::-webkit-scrollbar-thumb,
+    .dark #emoji-panel::-webkit-scrollbar-thumb {
+      background: #334155;
     }
     #messages::-webkit-scrollbar-thumb:hover,
     #emoji-panel::-webkit-scrollbar-thumb:hover {
-      background: #cbd5e1;
+      background: #94a3b8;
+    }
+    .dark #messages::-webkit-scrollbar-thumb:hover,
+    .dark #emoji-panel::-webkit-scrollbar-thumb:hover {
+      background: #475569;
     }
 
     /* Subtle pulsing recording animation */
@@ -73,39 +89,47 @@
     }
   </style>
 </head>
-<body class="bg-slate-100/90 text-slate-800 h-full w-full flex items-center justify-center p-0 sm:p-4 md:p-6 overflow-hidden">
+<body class="bg-slate-100/90 dark:bg-slate-950 text-slate-800 dark:text-slate-100 h-full w-full flex items-center justify-center p-0 sm:p-4 md:p-6 overflow-hidden transition-colors duration-200">
 
   <!-- ========================= -->
   <!-- SCREEN 1: Join Chatroom   -->
   <!-- ========================= -->
   <div id="join-screen"
-       class="w-full h-full sm:h-auto sm:max-w-md bg-white sm:rounded-2xl p-8 sm:p-10 shadow-sm border border-slate-200/80 flex flex-col justify-center transition-all duration-300">
-    <div class="mb-8">
-      <div class="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center mb-5 shadow-sm">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+       class="w-full h-full sm:h-auto sm:max-w-md bg-white dark:bg-slate-900 sm:rounded-2xl p-8 sm:p-10 shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col justify-center transition-all duration-300">
+    <div class="flex items-center justify-between mb-8">
+      <div class="w-12 h-12 rounded-xl bg-slate-900 dark:bg-slate-800 text-white flex items-center justify-center shadow-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-slate-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
       </div>
-      <h1 class="text-2xl font-bold tracking-tight text-slate-900">เข้าร่วมการสนทนา</h1>
-      <p class="text-sm text-slate-500 mt-1">ยินดีต้อนรับสู่ห้องแชทมินิมอลแบบเรียลไทม์</p>
+      <!-- Theme toggle in join screen -->
+      <button id="theme-toggle-join" type="button" title="สลับโหมดสว่าง/มืด" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+        <span class="dark:hidden">🌙</span>
+        <span class="hidden dark:inline">☀️</span>
+      </button>
+    </div>
+
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">เข้าร่วมการสนทนา</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">ยินดีต้อนรับสู่ห้องแชทมินิมอลแบบเรียลไทม์</p>
     </div>
 
     <div class="space-y-4">
       <div>
-        <label for="username-input" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">ชื่อของคุณ</label>
+        <label for="username-input" class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">ชื่อของคุณ</label>
         <input
           id="username-input"
           type="text"
           placeholder="พิมพ์ชื่อหรือนามแฝง..."
           maxlength="24"
           autocomplete="off"
-          class="w-full px-4 py-3 rounded-xl bg-slate-50 text-slate-900 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-800 transition text-sm placeholder-slate-400"
+          class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900/10 dark:focus:ring-slate-400/20 focus:border-slate-800 dark:focus:border-slate-500 transition text-sm placeholder-slate-400 dark:placeholder-slate-500"
         />
       </div>
 
       <button
         id="join-btn"
-        class="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-black text-white font-medium transition shadow-sm flex items-center justify-center gap-2 group text-sm"
+        class="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-black dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white text-white font-medium transition shadow-sm flex items-center justify-center gap-2 group text-sm"
       >
         <span>เริ่มสนทนา</span>
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -123,21 +147,21 @@
   <!-- ========================= -->
   <div id="chat-screen"
        class="hidden w-full h-full sm:h-[94vh] sm:max-h-[820px] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl
-              bg-white sm:rounded-2xl border border-slate-200/80 shadow-sm
-              flex flex-col overflow-hidden relative">
+              bg-white dark:bg-slate-900 sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm
+              flex flex-col overflow-hidden relative transition-colors duration-200">
 
     <!-- Header -->
-    <header class="bg-white border-b border-slate-100 px-4 sm:px-6 py-3.5 flex items-center justify-between shrink-0 z-10">
+    <header class="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-4 sm:px-6 py-3.5 flex items-center justify-between shrink-0 z-10">
       <div class="flex items-center gap-3">
         <div class="relative">
-          <div class="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 font-semibold text-sm">
+          <div class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300 font-semibold text-sm">
             💬
           </div>
-          <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white"></span>
+          <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900"></span>
         </div>
         <div>
-          <h2 class="text-sm font-semibold text-slate-900">ห้องสนทนาหลัก</h2>
-          <div class="flex items-center gap-1.5 text-xs text-slate-400">
+          <h2 class="text-sm font-semibold text-slate-900 dark:text-white">ห้องสนทนาหลัก</h2>
+          <div class="flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-400">
             <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
             <span id="online-count">ออนไลน์: 0</span>
           </div>
@@ -145,42 +169,48 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <span id="my-badge" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600"></span>
+        <span id="my-badge" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700"></span>
+        <!-- Theme toggle button in chat -->
+        <button id="theme-toggle-chat" type="button" title="สลับโหมดสว่าง/มืด" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center">
+          <span class="dark:hidden text-sm">🌙</span>
+          <span class="hidden dark:inline text-sm">☀️</span>
+        </button>
+        <!-- Leave / Change username button -->
+        <button id="leave-btn" type="button" title="ออกจากห้องหรือเปลี่ยนชื่อ" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-rose-500 dark:text-slate-400 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition flex items-center justify-center text-xs">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+        </button>
       </div>
     </header>
 
     <!-- กล่องข้อความ (Scrollable ได้เฉพาะส่วนนี้ ไม่กระทบทั้งหน้าจอ) -->
-    <main id="messages" class="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 space-y-3 bg-slate-50/50 overscroll-contain"></main>
+    <main id="messages" class="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 space-y-3 bg-slate-50/50 dark:bg-slate-950/60 overscroll-contain"></main>
 
     <!-- Typing indicator -->
-    <div id="typing-indicator" class="px-4 sm:px-6 text-[11px] text-slate-400 font-medium italic min-h-[1.25rem] bg-slate-50/50 flex items-center"></div>
+    <div id="typing-indicator" class="px-4 sm:px-6 text-[11px] text-slate-400 dark:text-slate-500 font-medium italic min-h-[1.25rem] bg-slate-50/50 dark:bg-slate-950/60 flex items-center"></div>
 
     <!-- Emoji picker popover -->
     <div id="emoji-panel"
          class="hidden absolute bottom-20 left-4 right-4 sm:left-auto sm:right-6 sm:w-80
-                bg-white border border-slate-200 rounded-2xl p-3 grid grid-cols-7 sm:grid-cols-8 gap-1.5 text-xl max-h-52 overflow-y-auto shadow-lg z-30 overscroll-contain">
+                bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-3 grid grid-cols-7 sm:grid-cols-8 gap-1.5 text-xl max-h-52 overflow-y-auto shadow-lg z-30 overscroll-contain">
     </div>
 
-    <!-- Bottom Input Bar (Minimal Design & Clean Discord/iMessage feel) -->
-    <footer class="bg-white border-t border-slate-100 p-3 sm:px-6 sm:py-3.5 shrink-0 relative z-20">
-      <div class="flex items-center gap-1.5 sm:gap-2 bg-slate-100 rounded-2xl px-2 py-1.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-slate-900/10 focus-within:border-slate-300 border border-transparent transition">
+    <!-- Bottom Input Bar (Minimal Design) -->
+    <footer class="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 p-3 sm:px-6 sm:py-3.5 shrink-0 relative z-20">
+      <div class="flex items-center gap-1.5 sm:gap-2 bg-slate-100 dark:bg-slate-800/90 rounded-2xl px-2 py-1.5 focus-within:bg-white dark:focus-within:bg-slate-800 focus-within:ring-2 focus-within:ring-slate-900/10 dark:focus-within:ring-slate-400/20 focus-within:border-slate-300 dark:focus-within:border-slate-700 border border-transparent transition">
 
-        <!-- ปุ่มแนบรูปภาพ (Image Upload) -->
-        <button id="image-btn" type="button" title="แนบรูปภาพ" class="text-slate-500 hover:text-slate-800 p-2 rounded-xl hover:bg-slate-200/60 active:scale-95 transition flex items-center justify-center">
+        <!-- ปุ่มแนบรูปภาพ/GIF (รวมฟังก์ชันไว้ในปุ่มเดียว) -->
+        <button id="image-btn" type="button" title="แนบรูปภาพหรือภาพ GIF" class="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 p-2 rounded-xl hover:bg-slate-200/60 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
         </button>
-        <input id="image-input" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/jpg" class="hidden" />
-
-        <!-- ปุ่ม GIF (ลูกเล่นมีมสไตล์แชท) -->
-        <button id="gif-btn" type="button" title="ส่งภาพ GIF" class="text-slate-500 hover:text-slate-800 px-2 py-1.5 text-xs font-bold tracking-tight rounded-xl hover:bg-slate-200/60 active:scale-95 transition">
-          GIF
-        </button>
-        <input id="gif-input" type="file" accept="image/gif" class="hidden" />
+        <!-- รองรับไฟล์ภาพทุกประเภทรวม GIF -->
+        <input id="image-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/jpg,image/svg+xml" class="hidden" />
 
         <!-- ปุ่ม Emoji -->
-        <button id="emoji-btn" type="button" title="อีโมจิ" class="text-slate-500 hover:text-slate-800 p-2 text-lg rounded-xl hover:bg-slate-200/60 active:scale-95 transition flex items-center justify-center">
+        <button id="emoji-btn" type="button" title="อีโมจิ" class="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 p-2 text-lg rounded-xl hover:bg-slate-200/60 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
@@ -192,18 +222,18 @@
           type="text"
           placeholder="พิมพ์ข้อความของคุณ..."
           autocomplete="off"
-          class="flex-1 min-w-0 px-2 py-1.5 bg-transparent text-slate-800 text-sm focus:outline-none placeholder-slate-400"
+          class="flex-1 min-w-0 px-2 py-1.5 bg-transparent text-slate-800 dark:text-slate-100 text-sm focus:outline-none placeholder-slate-400 dark:placeholder-slate-500"
         />
 
         <!-- ปุ่มอัดเสียง -->
-        <button id="mic-btn" type="button" title="อัดเสียง" class="text-slate-500 hover:text-slate-800 p-2 rounded-xl hover:bg-slate-200/60 active:scale-95 transition">
+        <button id="mic-btn" type="button" title="อัดเสียง" class="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 p-2 rounded-xl hover:bg-slate-200/60 dark:hover:bg-slate-700 active:scale-95 transition">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
           </svg>
         </button>
 
         <!-- ปุ่มส่งข้อความ -->
-        <button id="send-btn" type="button" title="ส่งข้อความ" class="bg-slate-900 hover:bg-slate-800 active:scale-95 text-white p-2.5 rounded-xl transition shadow-sm shrink-0 flex items-center justify-center">
+        <button id="send-btn" type="button" title="ส่งข้อความ" class="bg-slate-900 hover:bg-slate-800 active:scale-95 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white p-2.5 rounded-xl transition shadow-sm shrink-0 flex items-center justify-center">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7" />
           </svg>
@@ -213,7 +243,7 @@
 
     <!-- แถบสถานะตอนกำลังอัดเสียง (Minimal red pill indicator) -->
     <div id="recording-bar"
-         class="hidden absolute bottom-16 left-4 right-4 sm:left-6 sm:right-6 bg-slate-900 text-white text-xs px-4 py-3 rounded-2xl items-center justify-between shadow-xl z-30 transition">
+         class="hidden absolute bottom-16 left-4 right-4 sm:left-6 sm:right-6 bg-slate-900 dark:bg-slate-800 text-white text-xs px-4 py-3 rounded-2xl items-center justify-between shadow-xl z-30 transition border border-slate-700">
       <div class="flex items-center gap-2">
         <span class="relative flex h-2.5 w-2.5">
           <span class="recording-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
