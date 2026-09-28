@@ -91,7 +91,6 @@ function handleJoin(savedName) {
   socket.emit("join", myUsername);
   joinScreen.classList.add("hidden");
   chatScreen.classList.remove("hidden");
-  updateAppViewport();
   messageInput.focus();
 }
 
@@ -619,78 +618,40 @@ socket.on("typing", (username) => {
 });
 
 // ===============================================
-// จัดการความสูงหน้าจอแบบไดนามิก รองรับคีย์บอร์ดมือถือ/iPad (Instagram / Telegram Web style)
+// ป้องกันคีย์บอร์ดมือถือดัน Header ขยับ (Smooth Lock แบบ Instagram)
 // ===============================================
-function updateAppViewport() {
-  const isMobileOrTablet = window.innerWidth <= 1024;
-  if (!chatScreen || chatScreen.classList.contains("hidden")) return;
-
-  if (window.visualViewport) {
-    const vv = window.visualViewport;
-    // ป้องกัน iOS Safari ดัน body เลื่อนออกจากแกน 0
-    window.scrollTo(0, 0);
-    document.body.scrollTop = 0;
-
-    if (isMobileOrTablet) {
-      // ตั้งความสูงของ chatScreen ให้เท่ากับพื้นที่ที่มองเห็นจริงเหนือคีย์บอร์ด
-      chatScreen.style.height = `${vv.height}px`;
-      chatScreen.style.maxHeight = `${vv.height}px`;
-      
-      // ปรับตำแหน่ง offsetTop หากเบราว์เซอร์มี offset
-      if (vv.offsetTop > 0) {
-        chatScreen.style.transform = `translateY(${vv.offsetTop}px)`;
-      } else {
-        chatScreen.style.transform = "";
-      }
-    } else {
-      chatScreen.style.height = "";
-      chatScreen.style.maxHeight = "";
-      chatScreen.style.transform = "";
-    }
-  }
-
-  // เลื่อนรายการข้อความไปล่างสุดเสมอเพื่อให้เห็นข้อความล่าสุดและกล่องพิมพ์ชัดเจน
-  if (messagesDiv) {
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  }
-}
-
 if (window.visualViewport) {
-  window.visualViewport.addEventListener("resize", () => {
-    updateAppViewport();
-  });
-  window.visualViewport.addEventListener("scroll", () => {
-    // ป้องกันเบราว์เซอร์เลื่อนหน้าหลักไปบัง
+  const updateViewportLayout = () => {
+    // ป้องกันกรณีหน้าต่างเลื่อน (Scroll) หน้าหลัก
     window.scrollTo(0, 0);
     document.body.scrollTop = 0;
+
+    // ถ้าเปิดหน้าแชทอยู่ ให้คำนวณความสูงตาม visualViewport ในมือถือ
+    if (chatScreen && !chatScreen.classList.contains("hidden")) {
+      if (window.innerWidth < 640) {
+        chatScreen.style.height = `${window.visualViewport.height}px`;
+      } else {
+        chatScreen.style.height = "";
+      }
+      if (messagesDiv) {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+    }
+  };
+
+  window.visualViewport.addEventListener("resize", updateViewportLayout);
+  window.visualViewport.addEventListener("scroll", () => {
+    window.scrollTo(0, 0);
   });
 }
 
-// เมื่อแตะหรือโฟกัสช่องพิมพ์ข้อความ
+// ป้องกันการเผลอดึง scroll หน้ารวม
 messageInput.addEventListener("focus", () => {
-  // รันอัปเดตทันทีและหน่วงเล็กน้อยเพื่อให้รองรับ animation ของคีย์บอร์ด iOS
-  updateAppViewport();
-  setTimeout(updateAppViewport, 50);
-  setTimeout(updateAppViewport, 150);
-  setTimeout(updateAppViewport, 300);
-  setTimeout(() => {
-    if (messageInput.scrollIntoViewIfNeeded) {
-      messageInput.scrollIntoViewIfNeeded();
-    }
-  }, 200);
-});
-
-messageInput.addEventListener("blur", () => {
   setTimeout(() => {
     window.scrollTo(0, 0);
     document.body.scrollTop = 0;
-    updateAppViewport();
+    if (messagesDiv) messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }, 100);
-});
-
-window.addEventListener("resize", updateAppViewport);
-window.addEventListener("orientationchange", () => {
-  setTimeout(updateAppViewport, 200);
 });
 
 socket.on("disconnect", () => renderSystemMessage("ขาดการเชื่อมต่อ กำลังเชื่อมต่อใหม่..."));
