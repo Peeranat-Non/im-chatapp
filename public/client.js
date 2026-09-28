@@ -95,6 +95,9 @@ function handleJoin(savedName) {
 }
 
 function handleLeave() {
+  if (myUsername) {
+    socket.emit("leave");
+  }
   localStorage.removeItem("chat_username");
   myUsername = "";
   chatScreen.classList.add("hidden");
@@ -587,7 +590,11 @@ socket.on("chat-history", (history) => {
   if (Array.isArray(history)) {
     messagesDiv.innerHTML = "";
     history.forEach((msg) => {
-      renderMessage(msg);
+      if (msg.type === "system") {
+        renderSystemMessage(msg.message);
+      } else {
+        renderMessage(msg);
+      }
     });
   }
 });

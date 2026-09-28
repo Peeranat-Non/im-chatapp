@@ -119,10 +119,43 @@ io.on("connection", (socket) => {
     socket.emit("chat-history", chatHistory);
 
     if (isFirstTimeJoin) {
-      io.emit("system-message", `${username} ได้เข้าร่วมห้องแชท`);
+      const joinSysMsg = {
+        id: `sys-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type: "system",
+        message: `${username} ได้เข้าร่วมห้องแชท`,
+        timestamp: Date.now(),
+        time: new Date().toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }),
+      };
+      chatHistory.push(joinSysMsg);
+      if (chatHistory.length > MAX_HISTORY) chatHistory.shift();
+      saveHistory();
+
+      io.emit("system-message", joinSysMsg.message);
     }
     io.emit("online-count", Object.keys(onlineUsers).length);
     console.log(`[JOIN] ${username} (${socket.id})`);
+  });
+
+  // -------- Event: leave --------
+  socket.on("leave", () => {
+    const username = onlineUsers[socket.id];
+    if (username) {
+      delete onlineUsers[socket.id];
+      const leaveSysMsg = {
+        id: `sys-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type: "system",
+        message: `${username} ออกจากห้องแชทแล้ว`,
+        timestamp: Date.now(),
+        time: new Date().toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }),
+      };
+      chatHistory.push(leaveSysMsg);
+      if (chatHistory.length > MAX_HISTORY) chatHistory.shift();
+      saveHistory();
+
+      io.emit("system-message", leaveSysMsg.message);
+      io.emit("online-count", Object.keys(onlineUsers).length);
+      console.log(`[LEAVE] ${username} (${socket.id})`);
+    }
   });
 
   // -------- Event: chat-message --------
@@ -159,8 +192,19 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     const username = onlineUsers[socket.id];
     if (username) {
-      io.emit("system-message", `${username} ออกจากห้องแชทแล้ว`);
       delete onlineUsers[socket.id];
+      const disconnectSysMsg = {
+        id: `sys-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type: "system",
+        message: `${username} ออกจากห้องแชทแล้ว`,
+        timestamp: Date.now(),
+        time: new Date().toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }),
+      };
+      chatHistory.push(disconnectSysMsg);
+      if (chatHistory.length > MAX_HISTORY) chatHistory.shift();
+      saveHistory();
+
+      io.emit("system-message", disconnectSysMsg.message);
       io.emit("online-count", Object.keys(onlineUsers).length);
       console.log(`[DISCONNECT] ${username} (${socket.id})`);
     }
