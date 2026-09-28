@@ -62,12 +62,10 @@
       }
     }
 
-    /* ===== หน้าเข้าร่วมสนทนา: เมื่อแป้นพิมพ์เปิด ให้ดันการ์ดขึ้นบนและบีบให้กะทัดรัด ===== */
+    /* ===== หน้าเข้าร่วมสนทนา: เมื่อแป้นพิมพ์เปิด ดันการ์ดขึ้นบน และย่อทั้งการ์ดตามสัดส่วน =====
+       เนื้อหา/ไอคอน/ข้อความทุกอย่างคงเดิม ไม่ซ่อน ไม่ปรับระยะภายใน (ค่าสเกลคำนวณใน client.js) */
     #join-screen {
-      max-height: 100%;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
+      transform-origin: top center;
     }
     html.kb-open body {
       align-items: flex-start !important;
@@ -76,16 +74,10 @@
     }
     html.kb-open #join-screen {
       height: auto !important;
-      justify-content: flex-start !important;
-      padding: 1rem 1.5rem !important;
+      flex-shrink: 0;
+      transform: scale(var(--join-scale, 1));
+      transition: transform 0.15s ease-out;
     }
-    html.kb-open #join-screen > div:first-child { margin-bottom: 0.5rem !important; }
-    html.kb-open #join-screen > div:nth-child(2) { margin-bottom: 0.5rem !important; }
-    html.kb-open #join-screen > div:nth-child(2) p { display: none; }
-    html.kb-open #join-screen > div:first-child > div:first-child { width: 2.25rem; height: 2.25rem; }
-    html.kb-open #join-screen h1 { font-size: 1.25rem; }
-    html.kb-open #join-screen .space-y-4 > * + * { margin-top: 0.6rem !important; }
-    html.kb-open #join-screen #join-btn { padding-top: 0.6rem; padding-bottom: 0.6rem; }
 
     /* Ensure header remains completely pinned and stable */
     #chat-header {

@@ -636,17 +636,23 @@ function updateViewportLayout() {
     // ตรวจว่าแป้นพิมพ์เปิดอยู่ไหม (innerHeight ของ iOS ไม่ลดตามแป้นพิมพ์ แต่ visualViewport ลด)
     const kbOpen = window.innerHeight - h > 120;
     root.classList.toggle("kb-open", kbOpen);
+
+    // หน้าเข้าร่วม: คำนวณสเกลให้การ์ดทั้งใบ (เนื้อหาเดิมครบ) พอดีเหนือแป้นพิมพ์
+    if (joinScreen && !joinScreen.classList.contains("hidden")) {
+      let scale = 1;
+      if (kbOpen) {
+        const natural = joinScreen.offsetHeight; // offsetHeight ไม่นับ transform จึงเป็นความสูงจริงของการ์ด
+        const available = h - 20; // เผื่อขอบบน/ล่าง 10px
+        if (natural > 0) scale = Math.max(0.5, Math.min(1, available / natural));
+      }
+      root.style.setProperty("--join-scale", scale.toFixed(3));
+    }
     // กัน Safari เลื่อนทั้งหน้าขึ้นไปเอง
     window.scrollTo(0, 0);
     document.body.scrollTop = 0;
     // เลื่อนแชทลงล่างสุด ให้ข้อความล่าสุดไม่ถูกบัง
     if (messagesDiv && chatScreen && !chatScreen.classList.contains("hidden")) {
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
-    // หน้าเข้าร่วม: ให้ช่องกรอกชื่ออยู่ในส่วนที่เห็นเสมอ
-    if (kbOpen && document.activeElement === usernameInput) {
-      usernameInput.scrollIntoView({ block: "center" });
-      window.scrollTo(0, 0);
     }
   });
 }
