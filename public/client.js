@@ -617,6 +617,43 @@ socket.on("typing", (username) => {
   }, 1500);
 });
 
+// ===============================================
+// ป้องกันคีย์บอร์ดมือถือดัน Header ขยับ (Smooth Lock แบบ Instagram)
+// ===============================================
+if (window.visualViewport) {
+  const updateViewportLayout = () => {
+    // ป้องกันกรณีหน้าต่างเลื่อน (Scroll) หน้าหลัก
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+
+    // ถ้าเปิดหน้าแชทอยู่ ให้คำนวณความสูงตาม visualViewport ในมือถือ
+    if (chatScreen && !chatScreen.classList.contains("hidden")) {
+      if (window.innerWidth < 640) {
+        chatScreen.style.height = `${window.visualViewport.height}px`;
+      } else {
+        chatScreen.style.height = "";
+      }
+      if (messagesDiv) {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+    }
+  };
+
+  window.visualViewport.addEventListener("resize", updateViewportLayout);
+  window.visualViewport.addEventListener("scroll", () => {
+    window.scrollTo(0, 0);
+  });
+}
+
+// ป้องกันการเผลอดึง scroll หน้ารวม
+messageInput.addEventListener("focus", () => {
+  setTimeout(() => {
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    if (messagesDiv) messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }, 100);
+});
+
 socket.on("disconnect", () => renderSystemMessage("ขาดการเชื่อมต่อ กำลังเชื่อมต่อใหม่..."));
 socket.on("connect", () => {
   console.log("Connected to server:", socket.id);
