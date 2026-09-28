@@ -92,7 +92,7 @@ function handleJoin(savedName) {
   joinScreen.classList.add("hidden");
   chatScreen.classList.remove("hidden");
   messageInput.focus();
-  updateViewportLayout();
+  if (typeof updateViewportLayout === "function") updateViewportLayout();
 }
 
 function handleLeave() {
@@ -619,57 +619,58 @@ socket.on("typing", (username) => {
 });
 
 // ===============================================
-// Viewport Layout Handling (iOS Safari / iPad / Mobile Keyboard)
+// ป้องกันคีย์บอร์ดมือถือดัน Header ขยับ (Smooth Lock แบบ Instagram)
 // ===============================================
+const vv = window.visualViewport;
+let vvRaf = 0;
+
 function updateViewportLayout() {
-  requestAnimationFrame(() => {
-    const vv = window.visualViewport;
-    const height = vv ? Math.round(vv.height) : window.innerHeight;
-
-    document.documentElement.style.setProperty("--vvh", `${height}px`);
-
+  cancelAnimationFrame(vvRaf);
+  vvRaf = requestAnimationFrame(() => {
+    const h = vv ? vv.height : window.innerHeight;
+    const top = vv ? vv.offsetTop : 0;
+    const root = document.documentElement;
+    // CSS ใช้ตัวแปรนี้กำหนดความสูง html/body/#chat-screen ทุกขนาดจอ (รวม iPad)
+    root.style.setProperty("--vvh", `${h}px`);
+    root.style.setProperty("--vvt", `${top}px`);
+    // ตรวจว่าแป้นพิมพ์เปิดอยู่ไหม (innerHeight ของ iOS ไม่ลดตามแป้นพิมพ์ แต่ visualViewport ลด)
+    const kbOpen = window.innerHeight - h > 120;
+    root.classList.toggle("kb-open", kbOpen);
+    // กัน Safari เลื่อนทั้งหน้าขึ้นไปเอง
     window.scrollTo(0, 0);
     document.body.scrollTop = 0;
-    document.documentElement.scrollTop = 0;
-
-    if (chatScreen && !chatScreen.classList.contains("hidden")) {
-      if (messagesDiv) {
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-      }
+    // เลื่อนแชทลงล่างสุด ให้ข้อความล่าสุดไม่ถูกบัง
+    if (messagesDiv && chatScreen && !chatScreen.classList.contains("hidden")) {
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+    // หน้าเข้าร่วม: ให้ช่องกรอกชื่ออยู่ในส่วนที่เห็นเสมอ
+    if (kbOpen && document.activeElement === usernameInput) {
+      usernameInput.scrollIntoView({ block: "center" });
+      window.scrollTo(0, 0);
     }
   });
 }
 
-if (window.visualViewport) {
-  window.visualViewport.addEventListener("resize", updateViewportLayout);
-  window.visualViewport.addEventListener("scroll", updateViewportLayout);
+if (vv) {
+  vv.addEventListener("resize", updateViewportLayout);
+  vv.addEventListener("scroll", updateViewportLayout);
 }
 window.addEventListener("resize", updateViewportLayout);
-window.addEventListener("orientationchange", () => {
-  setTimeout(updateViewportLayout, 300);
-});
-
-// Call once on load
+window.addEventListener("orientationchange", () => setTimeout(updateViewportLayout, 300));
 updateViewportLayout();
 
-// Focus / Blur handlers for inputs (iOS / Android keyboard animation delays)
+// ตอนแตะช่องพิมพ์: แป้นพิมพ์ iOS มีแอนิเมชัน ต้องปรับซ้ำหลายจังหวะ
 messageInput.addEventListener("focus", () => {
-  [50, 150, 300, 600].forEach((delay) => {
-    setTimeout(updateViewportLayout, delay);
-  });
+  [50, 150, 300, 600].forEach((ms) => setTimeout(updateViewportLayout, ms));
 });
-
 messageInput.addEventListener("blur", () => {
   setTimeout(updateViewportLayout, 100);
 });
-
 usernameInput.addEventListener("focus", () => {
-  [50, 150, 300].forEach((delay) => {
-    setTimeout(() => {
-      updateViewportLayout();
-      usernameInput.scrollIntoView({ block: "center", behavior: "smooth" });
-    }, delay);
-  });
+  [50, 150, 300, 600].forEach((ms) => setTimeout(updateViewportLayout, ms));
+});
+usernameInput.addEventListener("blur", () => {
+  setTimeout(updateViewportLayout, 100);
 });
 
 socket.on("disconnect", () => renderSystemMessage("ขาดการเชื่อมต่อ กำลังเชื่อมต่อใหม่..."));
