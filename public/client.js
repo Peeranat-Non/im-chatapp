@@ -623,6 +623,10 @@ socket.on("typing", (username) => {
 // ===============================================
 const vv = window.visualViewport;
 let vvRaf = 0;
+let joinScrolledByUser = false;
+if (joinScreen) {
+  joinScreen.addEventListener("touchmove", () => { joinScrolledByUser = true; }, { passive: true });
+}
 
 function updateViewportLayout() {
   cancelAnimationFrame(vvRaf);
@@ -637,15 +641,14 @@ function updateViewportLayout() {
     const kbOpen = window.innerHeight - h > 120;
     root.classList.toggle("kb-open", kbOpen);
 
-    // หน้าเข้าร่วม: คำนวณสเกลให้การ์ดทั้งใบ (เนื้อหาเดิมครบ) พอดีเหนือแป้นพิมพ์
+    // หน้าเข้าร่วม: การ์ดขนาดเดิม เลื่อนลงล่างสุดให้เห็นช่องกรอกชื่อ+ปุ่มเหนือแป้นพิมพ์
+    // (ถ้าผู้ใช้เลื่อนการ์ดเองแล้ว จะไม่ดึงกลับ)
     if (joinScreen && !joinScreen.classList.contains("hidden")) {
-      let scale = 1;
-      if (kbOpen) {
-        const natural = joinScreen.offsetHeight; // offsetHeight ไม่นับ transform จึงเป็นความสูงจริงของการ์ด
-        const available = h - 20; // เผื่อขอบบน/ล่าง 10px
-        if (natural > 0) scale = Math.max(0.5, Math.min(1, available / natural));
+      if (!kbOpen) {
+        joinScrolledByUser = false;
+      } else if (!joinScrolledByUser) {
+        joinScreen.scrollTop = joinScreen.scrollHeight;
       }
-      root.style.setProperty("--join-scale", scale.toFixed(3));
     }
     // กัน Safari เลื่อนทั้งหน้าขึ้นไปเอง
     window.scrollTo(0, 0);
