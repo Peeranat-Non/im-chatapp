@@ -92,6 +92,7 @@ function handleJoin(savedName) {
   joinScreen.classList.add("hidden");
   chatScreen.classList.remove("hidden");
   messageInput.focus();
+  updateViewportLayout();
 }
 
 function handleLeave() {
@@ -618,40 +619,49 @@ socket.on("typing", (username) => {
 });
 
 // ===============================================
-// ป้องกันคีย์บอร์ดมือถือดัน Header ขยับ (Smooth Lock แบบ Instagram)
+// Viewport Layout Handling (iOS Safari / iPad / Mobile Keyboard)
 // ===============================================
-if (window.visualViewport) {
-  const updateViewportLayout = () => {
-    // ป้องกันกรณีหน้าต่างเลื่อน (Scroll) หน้าหลัก
+function updateViewportLayout() {
+  requestAnimationFrame(() => {
+    const vv = window.visualViewport;
+    const height = vv ? vv.height : window.innerHeight;
+    const offsetTop = vv ? vv.offsetTop : 0;
+
+    document.documentElement.style.setProperty("--vvh", `${height}px`);
+    document.documentElement.style.setProperty("--vvt", `${offsetTop}px`);
+
     window.scrollTo(0, 0);
     document.body.scrollTop = 0;
 
-    // ถ้าเปิดหน้าแชทอยู่ ให้คำนวณความสูงตาม visualViewport ในมือถือ
     if (chatScreen && !chatScreen.classList.contains("hidden")) {
-      if (window.innerWidth < 640) {
-        chatScreen.style.height = `${window.visualViewport.height}px`;
-      } else {
-        chatScreen.style.height = "";
-      }
       if (messagesDiv) {
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
       }
     }
-  };
-
-  window.visualViewport.addEventListener("resize", updateViewportLayout);
-  window.visualViewport.addEventListener("scroll", () => {
-    window.scrollTo(0, 0);
   });
 }
 
-// ป้องกันการเผลอดึง scroll หน้ารวม
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", updateViewportLayout);
+  window.visualViewport.addEventListener("scroll", updateViewportLayout);
+}
+window.addEventListener("resize", updateViewportLayout);
+window.addEventListener("orientationchange", () => {
+  setTimeout(updateViewportLayout, 300);
+});
+
+// Call once on load
+updateViewportLayout();
+
+// Focus / Blur handlers for messageInput (iOS keyboard animation delays)
 messageInput.addEventListener("focus", () => {
-  setTimeout(() => {
-    window.scrollTo(0, 0);
-    document.body.scrollTop = 0;
-    if (messagesDiv) messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  }, 100);
+  [50, 150, 300, 600].forEach((delay) => {
+    setTimeout(updateViewportLayout, delay);
+  });
+});
+
+messageInput.addEventListener("blur", () => {
+  setTimeout(updateViewportLayout, 100);
 });
 
 socket.on("disconnect", () => renderSystemMessage("ขาดการเชื่อมต่อ กำลังเชื่อมต่อใหม่..."));
