@@ -624,14 +624,13 @@ socket.on("typing", (username) => {
 function updateViewportLayout() {
   requestAnimationFrame(() => {
     const vv = window.visualViewport;
-    const height = vv ? vv.height : window.innerHeight;
-    const offsetTop = vv ? vv.offsetTop : 0;
+    const height = vv ? Math.round(vv.height) : window.innerHeight;
 
     document.documentElement.style.setProperty("--vvh", `${height}px`);
-    document.documentElement.style.setProperty("--vvt", `${offsetTop}px`);
 
     window.scrollTo(0, 0);
     document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
 
     if (chatScreen && !chatScreen.classList.contains("hidden")) {
       if (messagesDiv) {
@@ -653,7 +652,7 @@ window.addEventListener("orientationchange", () => {
 // Call once on load
 updateViewportLayout();
 
-// Focus / Blur handlers for messageInput (iOS keyboard animation delays)
+// Focus / Blur handlers for inputs (iOS / Android keyboard animation delays)
 messageInput.addEventListener("focus", () => {
   [50, 150, 300, 600].forEach((delay) => {
     setTimeout(updateViewportLayout, delay);
@@ -662,6 +661,15 @@ messageInput.addEventListener("focus", () => {
 
 messageInput.addEventListener("blur", () => {
   setTimeout(updateViewportLayout, 100);
+});
+
+usernameInput.addEventListener("focus", () => {
+  [50, 150, 300].forEach((delay) => {
+    setTimeout(() => {
+      updateViewportLayout();
+      usernameInput.scrollIntoView({ block: "center", behavior: "smooth" });
+    }, delay);
+  });
 });
 
 socket.on("disconnect", () => renderSystemMessage("ขาดการเชื่อมต่อ กำลังเชื่อมต่อใหม่..."));

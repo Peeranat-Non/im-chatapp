@@ -2,7 +2,7 @@
 <html lang="th" class="h-full w-full overflow-hidden">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content, viewport-fit=cover" />
   <title>Minimal Chat</title>
 
   <!-- Tailwind CSS CDN -->
@@ -31,11 +31,12 @@
     /* Prevent elastic scrolling and screen bouncing across mobile iOS/Android and desktop */
     html, body {
       position: fixed;
-      top: var(--vvt, 0px);
+      top: 0;
       left: 0;
       right: 0;
+      bottom: 0;
       width: 100%;
-      height: var(--vvh, 100dvh);
+      height: 100%;
       overflow: hidden;
       overscroll-behavior: none;
       touch-action: manipulation;
@@ -45,17 +46,34 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Fixed mobile app container layout like Instagram/Line/Discord */
+    /* Fixed mobile & tablet chat container layout */
     #chat-screen {
+      position: fixed !important;
+      top: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
       height: var(--vvh, 100dvh);
       max-height: var(--vvh, 100dvh);
+      margin-left: auto;
+      margin-right: auto;
+      z-index: 20;
     }
 
     @media (min-width: 640px) {
       #chat-screen {
-        height: min(820px, calc(var(--vvh, 100dvh) - 2rem));
-        max-height: min(820px, calc(var(--vvh, 100dvh) - 2rem));
+        top: max(0px, calc((var(--vvh, 100dvh) - 820px) / 2));
+        height: min(820px, var(--vvh, 100dvh));
+        max-height: min(820px, var(--vvh, 100dvh));
       }
+    }
+
+    /* Fixed mobile & tablet join container */
+    #join-screen {
+      max-height: var(--vvh, 100dvh);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: auto;
     }
 
     /* Ensure header remains completely pinned and stable */
@@ -123,7 +141,7 @@
   <!-- SCREEN 1: Join Chatroom   -->
   <!-- ========================= -->
   <div id="join-screen"
-       class="w-full h-full sm:h-auto sm:max-w-md bg-white dark:bg-slate-900 sm:rounded-2xl p-8 sm:p-10 shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col justify-center transition-all duration-300">
+       class="w-full max-w-md bg-white dark:bg-slate-900 sm:rounded-2xl p-6 sm:p-8 md:p-10 shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col justify-center my-auto transition-all duration-300">
     <div class="flex items-center justify-between mb-8">
       <div class="w-12 h-12 rounded-xl bg-slate-900 dark:bg-slate-800 text-white flex items-center justify-center shadow-sm">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-slate-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
